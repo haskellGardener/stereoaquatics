@@ -1,0 +1,26 @@
+
+Power
+  24 volt primary supply:
+    MEAN WELL UHP-500-24 Slim PFC Switching Power Supply, 24VDC 20.9A 501W
+  Buck Convers for 12v 5v 3.3v
+
+DIN Rail and accessories
+
+Protection
+  Fuses
+  Optocouplers
+    Diydeg 3.3V input to 24V output
+    
+Rasberry Pi 4 or 3
+Pi extender hat/ribbon cables
+  KEYESTUDIO GPIO Breakout Kit 
+
+SPI
+MCP23S18-E/SP -- GPIO extender (16 GPIO ports)
+MCP23S09-E/P -- GPIO extender (8 GPIO ports)
+24VDC Relays
+  G6SK-2 DC24 -- Omron Electronics Inc-EMC Div -- 24VDC Latching dual coil relay
+  V23079, AXICOM -- RELAY GEN PURPOSE DPDT 2A 24VDC
+
+I²C
+
