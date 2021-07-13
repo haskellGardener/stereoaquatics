@@ -22,5 +22,18 @@ MCP23S09-E/P -- GPIO extender (8 GPIO ports)
   G6SK-2 DC24 -- Omron Electronics Inc-EMC Div -- 24VDC Latching dual coil relay
   V23079, AXICOM -- RELAY GEN PURPOSE DPDT 2A 24VDC
 
+Notes on SPI:
+https://hackaday.com/2014/11/25/better-spi-bus-design/
+https://hackaday.com/2016/07/01/what-could-go-wrong-spi/
+https://www.totalphase.com/blog/2020/07/what-is-spi-protocol-how-to-debug-spi-communication/
+https://github.com/SmingHub/Sming/issues/618
+https://www.embeddedcomputing.com/technology/software-and-os/ides-application-programming/introduction-to-spi-interface
+https://www.analog.com/en/analog-dialogue/articles/precision-spi-switch-configuration-increases-channel-density.html
+https://wiki.analog.com/university/courses/electronics/m2k-spi-debug
+https://www.electronicdesign.com/technologies/boards/article/21767094/ease-the-debugging-of-serial-peripheral-interfaces
+
+
+
+
 I²C
 
