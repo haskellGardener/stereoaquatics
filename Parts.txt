@@ -32,8 +32,7 @@ https://www.analog.com/en/analog-dialogue/articles/precision-spi-switch-configur
 https://wiki.analog.com/university/courses/electronics/m2k-spi-debug
 https://www.electronicdesign.com/technologies/boards/article/21767094/ease-the-debugging-of-serial-peripheral-interfaces
 
-
-
+33972/A/T Multiple Switch Detection Interface with Suppressed Wake-up
 
 I²C
 

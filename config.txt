@@ -1,0 +1,15 @@
+# Uncomment some or all of these to enable the optional hardware interfaces
+dtparam=i2c_arm=off
+dtparam=i2s=off
+dtparam=spi=on
+
+dtoverlay=spi0-cs
+dtoverlay=spi1-1cs
+dtparam=cs0_pin=12
+
+dtdebug=on
+
+dtoverlay=mcp23s17:s08-spi0-0-present=1
+#,s08-spi0-0-int-gpio=25
+dtoverlay=mcp23s17:s08-spi1-0-present=1
+# ,s17-spi0-0-int-gpio=25
