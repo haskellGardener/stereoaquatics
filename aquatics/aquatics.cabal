@@ -33,9 +33,12 @@ library
     , RecordWildCards
     , ScopedTypeVariables
     , TypeApplications
+    , NegativeLiterals
   hs-source-dirs:    src
   exposed-modules:   Resistors
+                   , Stuff
   build-depends:     base >= 4.8 && < 5
+                   , hashable
                    , holmes
                    , mtl
                    , text
