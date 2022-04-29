@@ -73,23 +73,39 @@ class (Eq a, Show a, Ord a, RealFrac a) => GeometryC a
     parallelGeometry :: [] a -> Geometry a
     seriesGeometry   :: [] a -> Geometry a
     round3Geometry   :: Geometry a -> Geometry a
+    getScalar  :: Geometry a -> a
+    getCount   :: Geometry a -> Int
+    isSeries   :: Geometry a -> Bool
+    isParallel :: Geometry a -> Bool
     -- defaults
     parallelGeometry ns = Parallel (parallelToSingle ns) ns
     seriesGeometry   ns = Series   (seriesToSingle   ns) ns
     round3Geometry   (Parallel s ns) = Parallel (round3 s) ns
     round3Geometry   (Series   s ns) = Series   (round3 s) ns
+    getScalar  (Parallel s _) = s
+    getScalar  (Series   s _) = s
+    getCount   (Parallel _ n) = length n
+    getCount   (Series   _ n) = length n
+    isSeries   (Parallel _ n) = False
+    isSeries   (Series   _ n) = True
+    isParallel g = not $ isSeries g
+
 
 newtype Seconds = Seconds Double
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Seconds where
   show seconds = showFFloat Nothing seconds ""
 
 newtype Ohms = Ohms Double
-  deriving stock   (Generic, Data)         -- Should Show be in stock it will show "Ohms 0", not just numerals.
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read) -- deriving newtype Show is just numerals (e.g. "0"), not "Ohms 0" etc.
+  deriving stock   ( Data, Generic ) -- Should Show be in stock it will show "Ohms 0", not just numerals.
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   ) -- deriving newtype Show is just numerals (e.g. "0"), not "Ohms 0" etc.
   deriving newtype (Hashable)
 
 instance Show Ohms where
@@ -101,16 +117,20 @@ instance GeometryC Ohms where
   parallelGeometry ns = Parallel (fromIntegral . round $ parallelToSingle ns) ns -- This could be changed to round only when values are larger than X.
 
 newtype Watts = Watts Double
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Watts where
   show watts = showFFloat Nothing watts ""
 
 newtype Tolerance = Tolerance Double
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Tolerance where
@@ -118,19 +138,25 @@ instance Show Tolerance where
 
 newtype Leads = Leads Word8
   deriving stock   (Generic, Data)
-  deriving newtype (Integral, Ix, Bounded, FiniteBits, Bits, Storable, Eq, Ord, Real, Enum, Num, Read, Show)
+  deriving newtype ( Bits, Bounded, Enum, Eq, FiniteBits, Integral
+                   , Ix, Num, Ord, Read, Real, Show, Storable
+                   )
 
 newtype Hertz = Hertz Double -- Hz
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord , Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Hertz where
   show hertz = showFFloat Nothing hertz ""
 
 newtype Duty = Duty Double -- Duty Cycle (a percentage)
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Duty where
@@ -140,8 +166,10 @@ instance Show Duty where
 -- Capacitors
 
 newtype Farads = Farads Double
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Farads where
@@ -155,8 +183,10 @@ instance GeometryC Farads where
 -- Inductors
 
 newtype Henrys = Henrys Double
-  deriving stock   (Generic, Data)
-  deriving newtype (Eq, Ord, RealFloat, RealFrac, Real, Floating, Enum, Fractional, Num, Read)
+  deriving stock   ( Data, Generic )
+  deriving newtype ( Enum, Eq, Floating, Fractional, Num
+                   , Ord, Read, Real, RealFloat, RealFrac
+                   )
   deriving newtype (Hashable)
 
 instance Show Henrys where
@@ -230,23 +260,26 @@ tw(ns) = 0.25 * Rt(kΩ) * C(pF) * ( 1 + 0.7 / Rt(kΩ) )
 -- | twF(ns) = 0.28 * Rt(kΩ) * C(pF) * ( 1 + 0.7 / Rt(kΩ) ) -- For non-polarized caps.
 --   twF(ns) = 0.22 * Rt(kΩ) * C(pF) * ( 1 + 0.7 / Rt(kΩ) ) -- For polarized electrolytics.
 twF :: Double -> Ohms -> Farads -> Seconds
-twF k ohms farads = fromRational . toRational         -- Convert from Double to seconds.
+twF k ohms farads = convert                           -- Convert from Double to seconds.
                   $ (k * rt * cpF * ( 1 + 0.7 / rt )) -- This expression produces Double in ns.
                   / 1000000000                        -- Convert from ns to seconds.
   where
     rt :: Double
-    rt = fromRational . toRational $ ohms / 1000.0
+    rt = convert $ ohms / 1000.0
 
     cpF :: Double
-    cpF = fromRational . toRational
-        $ farads * recip pf -- Convert to picofarads from farads.
+    cpF = convert $ farads * recip pf -- Convert to picofarads from farads.
+
+-- convert :: () =>
+convert :: (RealFrac a, RealFrac b) => a -> b
+convert = fromRational . toRational
 
 hzDutyToSeconds :: Hertz -> Duty -> Seconds
-hzDutyToSeconds hertz duty = fromRational $ toRational dutySeconds
+hzDutyToSeconds hertz duty = dutySeconds
   where
-    period = fromRational . toRational $ recip hertz
-    dutySeconds = period * duty
-        
+    period = convert $ recip hertz
+    dutySeconds = convert $ period * duty
+
 decade :: (RealFrac a) => a -> Int
 decade a
   | a < 0 = decade (a * -1)
@@ -334,11 +367,17 @@ parallelOhmsGeometry = map parallelGeometry $ crossProduct resistors
 seriesOhmsGeometry :: [] (Geometry Ohms)
 seriesOhmsGeometry = map seriesGeometry $ crossProduct resistors
 
+ohmsGeometry :: [] (Geometry Ohms)
+ohmsGeometry = parallelOhmsGeometry ++ seriesOhmsGeometry
+
 parallelFaradsGeometry :: [] (Geometry Farads)
 parallelFaradsGeometry = map parallelGeometry $ crossProduct capacitors
 
 seriesFaradsGeometry :: [] (Geometry Farads)
 seriesFaradsGeometry = map seriesGeometry $ crossProduct capacitors
+
+faradsGeometry :: [] (Geometry Farads)
+faradsGeometry = parallelFaradsGeometry ++ seriesFaradsGeometry
 
 -- -----------------------------------------------------------------------------------------------------------------------------------------------------
 -- Sample code + WIP
@@ -362,20 +401,74 @@ dinesman = do
   where
     folks = [ "baker", "cooper", "fletcher", "miller", "smith" ]
 
--- | multivibrator must used a Defined strategy as the enums are huge?
-multivibrator :: [] Ohms -> [] Farads -> IO (Maybe ([] Ohms, [] Farads))
-multivibrator os fs = error ""
-  -- do
-  -- foo <- and'
-  --   [ rt .>= Ohms 5000
-  --   , rt .<  Ohms 250000
-  --   , tw .>= 40 * nf
-  --   ]
+crossProducts :: [Geometry Ohms] -> [Geometry Farads] -> [] (Geometry Ohms, Geometry Farads)
+crossProducts ogs fgs = do
+  og <- rangeFiltered
+  fg <- fgs
+  pure (round3Geometry og, round3Geometry fg)
   where
-    nonPolarized = 0.28
-    -- twF k rt c = k * rt * c * ( 1 + 0.7 / rt )
+    rangeFiltered = filter (\geo -> getScalar geo >= 5000 && getScalar geo < 250000) ogs
 
-    -- strat :: Config Holmes (Intersect Ohms)
-    -- strat = using $ map Intersect os
+dutySeconds :: Duty -> Seconds
+dutySeconds duty = hzDutyToSeconds 1800 duty
+
+twCalcs :: [] (Geometry Ohms, Geometry Farads) -> [] (Seconds, Geometry Ohms, Geometry Farads)
+twCalcs geos = map (\(go,gf) -> (round3 $ twF 0.28 (getScalar go) (getScalar gf), go, gf )) geos
 
 
+closerP :: Seconds -> Seconds -> Bool
+closerP target candidate = candidate >= lower && candidate <= upper
+  where
+    fudge = target * 0.01 -- 2%
+    upper = target + fudge
+    lower = target - fudge
+
+componentCount :: (GeometryC a, GeometryC b) => Geometry a -> Geometry b -> Int
+componentCount a b = getCount a + getCount b
+
+-- map (\(s,_,_) -> s) . filter (\(s,_,_) -> (round3 $ dutySeconds 0.053) == s) $  twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- take 1 . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,_) -> isSeries o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,_) -> isSeries o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,_) -> isParallel o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,_,f) -> isSeries f && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,_,f) -> isParallel f && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries f && isParallel o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds 0.076) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+-- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds 0.06) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+
+fnoodles :: [] Duty -> [] Int
+fnoodles ds
+  = map mapF ds
+  where
+    mapF :: Duty -> Int
+    mapF d
+      = length
+      . map (\(_,o,f) -> (componentCount o f, o, f))
+      $ filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds d) == s)
+        calcs
+
+{-# NOINLINE calcs #-}
+calcs :: [] (Seconds, Geometry Ohms, Geometry Farads)
+calcs = twCalcs $ crossProducts ohmsGeometry faradsGeometry
+
+targets :: [] Duty
+targets = map (/ 100.0)
+  [ 5.3
+  , 5.4
+  , 5.5
+  , 5.6
+  , 5.7
+  , 5.8
+  , 5.9
+  , 6.0
+  , 6.1
+  , 6.2
+  , 6.3
+  , 6.4
+  , 6.5
+  , 6.6
+  , 6.8
+  , 7.6
+  ]
