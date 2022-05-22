@@ -20,7 +20,6 @@ Portability : non-portable (GHC extensions)
 Contumacy   : Best viewed with unbroken and unwrapped 154 column display.
 
 Description : Resistors.
-Neighborhood: GoldCoast
 -}
 {-
 infixr 9  .
