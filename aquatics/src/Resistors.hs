@@ -11,7 +11,7 @@
 {-|
 Module      : Resistors
 Copyright   : © 2022 Robert Lee
-License     : All Rights Reserved
+License     : ISC
 
 Maintainers : robert.lee@chicago.vc (Robert)
 Stability   : None
@@ -19,7 +19,7 @@ Portability : non-portable (GHC extensions)
 
 Contumacy   : Best viewed with unbroken and unwrapped 154 column display.
 
-Description : Provides processing for commissions based on CSV inputs.
+Description : Resistors.
 Neighborhood: GoldCoast
 -}
 {-
@@ -47,7 +47,7 @@ import Data.Default     ( Default(..) )
 import Data.Data        ( Data, Typeable )
 import Data.Hashable
 import Data.Ix          ( Ix )
-import Data.List        ( sortBy )
+import Data.List        ( nub, nubBy, sortBy, sort )
 import Data.Text        ( Text )
 import Data.Word        ( Word8 )
 import Data.Bits        ( Bits, FiniteBits )
@@ -74,6 +74,7 @@ class (Eq a, Show a, Ord a, RealFrac a) => GeometryC a
     seriesGeometry   :: [] a -> Geometry a
     round3Geometry   :: Geometry a -> Geometry a
     getScalar  :: Geometry a -> a
+    getValues  :: Geometry a -> [a]
     getCount   :: Geometry a -> Int
     isSeries   :: Geometry a -> Bool
     isParallel :: Geometry a -> Bool
@@ -84,6 +85,8 @@ class (Eq a, Show a, Ord a, RealFrac a) => GeometryC a
     round3Geometry   (Series   s ns) = Series   (round3 s) ns
     getScalar  (Parallel s _) = s
     getScalar  (Series   s _) = s
+    getValues  (Parallel _ n) = n
+    getValues  (Series   _ n) = n
     getCount   (Parallel _ n) = length n
     getCount   (Series   _ n) = length n
     isSeries   (Parallel _ n) = False
@@ -114,7 +117,6 @@ instance Show Ohms where
 instance GeometryC Ohms where
   seriesToSingle   = sum
   parallelToSingle = recip . sum . map recip
-  parallelGeometry ns = Parallel (fromIntegral . round $ parallelToSingle ns) ns -- This could be changed to round only when values are larger than X.
 
 newtype Watts = Watts Double
   deriving stock   ( Data, Generic )
@@ -260,15 +262,16 @@ tw(ns) = 0.25 * Rt(kΩ) * C(pF) * ( 1 + 0.7 / Rt(kΩ) )
 -- | twF(ns) = 0.28 * Rt(kΩ) * C(pF) * ( 1 + 0.7 / Rt(kΩ) ) -- For non-polarized caps.
 --   twF(ns) = 0.22 * Rt(kΩ) * C(pF) * ( 1 + 0.7 / Rt(kΩ) ) -- For polarized electrolytics.
 twF :: Double -> Ohms -> Farads -> Seconds
-twF k ohms farads = convert                           -- Convert from Double to seconds.
-                  $ (k * rt * cpF * ( 1 + 0.7 / rt )) -- This expression produces Double in ns.
-                  / 1000000000                        -- Convert from ns to seconds.
+twF k ohms farads = ns * convert (k * rt * cpF * ( 1 + 0.7 / rt )) -- It is necessary to multiply from nanoseconds to seconds
   where
     rt :: Double
     rt = convert $ ohms / 1000.0
 
     cpF :: Double
     cpF = convert $ farads * recip pf -- Convert to picofarads from farads.
+
+twCD :: Ohms -> Farads -> Seconds
+twCD rx cx = 0.468 * convert rx * convert cx -- Datasheet says 0.45
 
 -- convert :: () =>
 convert :: (RealFrac a, RealFrac b) => a -> b
@@ -338,40 +341,48 @@ round3 a
 nf = Farads 0.000000001
 pf = Farads 0.000000000001
 
--- | capacitors uses (farads * (1/picofarad)) for rounding. It converts back to farads with (*picofarad).
+µs = Seconds 0.000001       -- NB: the µ is unicode not an ascii u
+ns = Seconds 0.000000001
+ps = Seconds 0.000000000001
+
+-- | capacitors
 capacitors :: [] Farads
-capacitors = map (* pf) . map (fromIntegral . round) . map (* (recip pf)) $ nfs ++ pfs
+capacitors
+  = map round3 $ nfs ++ pfs
   where
     nfs = map (* nf) [ 1, 1.2, 1.5, 1.8, 2, 2.2, 3.3, 4.7, 5.6, 6.8, 8.2, 10, 22, 100 ]
     pfs = map (* pf) [ 800, 750, 680, 470, 330, 220, 120, 100, 82 ]
 
 resistors :: [] Ohms
 resistors =
-  [ 47.0    , 100.0   , 250.0   , 500.0   , 1000.0  , 2500.0  , 2700.0
-  , 3000.0  , 5000.0  , 5300.0  , 5600.0  , 7150.0  , 7320.0  , 7320.0
-  , 7500.0  , 7680.0  , 7870.0  , 7870.0  , 8000.0  , 8200.0  , 8250.0
-  , 8450.0  , 8870.0  , 9090.0  , 9100.0  , 9310.0  , 9530.0  , 9760.0
-  , 10200.0 , 10500.0 , 10700.0 , 11000.0 , 11300.0 , 20500.0 , 30000.0
-  , 40200.0 , 47000.0 , 56200.0
+  [ 47.0    , 100.0   , 250.0   , 500.0   , 1000.0  , 1300.0  , 1400.0 , 2500.0
+  , 2700.0  , 3000.0  , 5000.0  , 5300.0  , 5600.0  , 7150.0  , 7320.0
+  , 7320.0  , 7500.0  , 7680.0  , 7870.0  , 7870.0  , 8000.0  , 8200.0
+  , 8250.0  , 8450.0  , 8870.0  , 9090.0  , 9100.0  , 9310.0  , 9530.0
+  , 9760.0  , 10000.0 , 10200.0 , 10500.0 , 10700.0 , 11000.0 , 11300.0
+  , 18000.0 , 18700.0 , 20000.0 , 20500.0 , 30000.0 , 40200.0 , 47000.0
+  , 56200.0
   ]
 
-crossProduct :: [] a -> [[a]]
-crossProduct pp = do
-  a0 <- pp
-  a1 <- pp
-  pure [a0,a1]
+crossProduct :: (Ord a) => [] a -> [[a]]
+crossProduct pp = nub az -- remove dups
+  where
+    az = do
+      a0 <- pp
+      a1 <- pp
+      pure $ sort [a0,a1]
 
 parallelOhmsGeometry :: [] (Geometry Ohms)
 parallelOhmsGeometry = map parallelGeometry $ crossProduct resistors
 
 seriesOhmsGeometry :: [] (Geometry Ohms)
-seriesOhmsGeometry = map seriesGeometry $ crossProduct resistors
+seriesOhmsGeometry = map seriesGeometry $ (crossProduct resistors ++ [resistors])
 
 ohmsGeometry :: [] (Geometry Ohms)
 ohmsGeometry = parallelOhmsGeometry ++ seriesOhmsGeometry
 
 parallelFaradsGeometry :: [] (Geometry Farads)
-parallelFaradsGeometry = map parallelGeometry $ crossProduct capacitors
+parallelFaradsGeometry = map parallelGeometry $ (crossProduct capacitors ++ [capacitors])
 
 seriesFaradsGeometry :: [] (Geometry Farads)
 seriesFaradsGeometry = map seriesGeometry $ crossProduct capacitors
@@ -412,44 +423,49 @@ crossProducts ogs fgs = do
 dutySeconds :: Duty -> Seconds
 dutySeconds duty = hzDutyToSeconds 1800 duty
 
-twCalcs :: [] (Geometry Ohms, Geometry Farads) -> [] (Seconds, Geometry Ohms, Geometry Farads)
-twCalcs geos = map (\(go,gf) -> (round3 $ twF 0.28 (getScalar go) (getScalar gf), go, gf )) geos
-
-
-closerP :: Seconds -> Seconds -> Bool
-closerP target candidate = candidate >= lower && candidate <= upper
+isWithin :: Seconds -> Seconds -> Seconds -> Bool
+isWithin margin target candidate = candidate >= lower && candidate <= upper
   where
-    fudge = target * 0.01 -- 2%
+    fudge = target * margin
     upper = target + fudge
     lower = target - fudge
 
 componentCount :: (GeometryC a, GeometryC b) => Geometry a -> Geometry b -> Int
 componentCount a b = getCount a + getCount b
 
--- map (\(s,_,_) -> s) . filter (\(s,_,_) -> (round3 $ dutySeconds 0.053) == s) $  twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- take 1 . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,_) -> isSeries o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,_) -> isSeries o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,_) -> isParallel o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,_,f) -> isSeries f && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,_,f) -> isParallel f && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries f && isParallel o && (round3 $ dutySeconds 0.053) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
+fnoodlesTargets :: [] (Int, Duty)
+fnoodlesTargets = fnoodles targets
 
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds 0.076) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
--- length . map (\(_,o,f) -> (componentCount o f, o, f)) . filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds 0.06) == s) $ twCalcs $ crossProducts ohmsGeometry faradsGeometry
-
-fnoodles :: [] Duty -> [] Int
+fnoodles :: [] Duty -> [] (Int, Duty)
 fnoodles ds
-  = map mapF ds
-  where
-    mapF :: Duty -> Int
-    mapF d
-      = length
-      . map (\(_,o,f) -> (componentCount o f, o, f))
-      $ filter (\(s,o,f) -> isSeries o && isParallel f && (round3 $ dutySeconds d) == s)
-        calcs
+  = map (\d -> (length $ matching d, round3 $ d * 100.0)) ds -- The snd of the pair is for display only.
 
-{-# NOINLINE calcs #-}
+matching :: Duty -> [] (Seconds, Geometry Ohms, Geometry Farads)
+matching d
+  = filter (\(_,o,f) -> componentCount o f <= 4)
+  $ filter (\(s,o,f) -> isWithin 0.0002 dutySecs s)
+    serialOhmsParallelFaradsCalcs
+  where
+    dutySecs = dutySeconds d
+
+serialOhmsParallelFaradsCalcs :: [] (Seconds, Geometry Ohms, Geometry Farads)
+serialOhmsParallelFaradsCalcs = twCalcs $ crossProducts seriesOhmsGeometry parallelFaradsGeometry
+
+matchingRounded :: Duty -> [] (Seconds, Geometry Ohms, Geometry Farads)
+matchingRounded d
+  = filter (\(_,o,f) -> componentCount o f <= 4)
+  $ filter (\(s,o,f) -> dutySecs == s)
+    serialOhmsParallelFaradsCalcsRounded
+  where
+    dutySecs = round3 $ dutySeconds d
+
+-- Pre rounding over multiple duty cycles can be faster for rounded comparisons.
+serialOhmsParallelFaradsCalcsRounded :: [] (Seconds, Geometry Ohms, Geometry Farads)
+serialOhmsParallelFaradsCalcsRounded = map (\(s,o,f) -> (round3 s,o,f)) serialOhmsParallelFaradsCalcs
+
+twCalcs :: [] (Geometry Ohms, Geometry Farads) -> [] (Seconds, Geometry Ohms, Geometry Farads)
+twCalcs geos = map (\(go,gf) -> ({- twF 0.28 -} twCD (getScalar go) (getScalar gf), go, gf)) geos
+
 calcs :: [] (Seconds, Geometry Ohms, Geometry Farads)
 calcs = twCalcs $ crossProducts ohmsGeometry faradsGeometry
 
@@ -472,3 +488,7 @@ targets = map (/ 100.0)
   , 6.8
   , 7.6
   ]
+
+-- nubFunc = nubBy
+
+-- nubBy (\(os,fs) (os', fs') -> sort os == sort os' && sort fs == sort fs') $ map (\(_, a, b) -> (getValues a, getValues b)) $ matching (6.8 / 100)
