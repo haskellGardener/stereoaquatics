@@ -468,25 +468,53 @@ twCalcs geos = map (\(go,gf) -> ({- twF 0.28 -} twCD (getScalar go) (getScalar g
 calcs :: [] (Seconds, Geometry Ohms, Geometry Farads)
 calcs = twCalcs $ crossProducts ohmsGeometry faradsGeometry
 
+-- targets :: [] Duty
+-- targets = map (/ 100.0)
+--   [ 5.3
+--   , 5.4
+--   , 5.5
+--   , 5.6
+--   , 5.7
+--   , 5.8
+--   , 5.9
+--   , 6.0
+--   , 6.1
+--   , 6.2
+--   , 6.3
+--   , 6.4
+--   , 6.5
+--   , 6.6
+--   , 6.8
+--   , 7.6
+--   ]
+
 targets :: [] Duty
 targets = map (/ 100.0)
-  [ 5.3
-  , 5.4
-  , 5.5
-  , 5.6
-  , 5.7
-  , 5.8
-  , 5.9
-  , 6.0
-  , 6.1
-  , 6.2
-  , 6.3
-  , 6.4
-  , 6.5
-  , 6.6
-  , 6.8
-  , 7.6
+          
+  [  2.55 --  1    -- First tier ICs
+  ,  5.6  --  2 
+  , 11.2  --  3 
+  , 16.9  --  4 
+  , 22.5  --  5 
+  , 28.1  --  6 
+  , 33.8  --  7 
+  , 39.4  --  8
+  , 45.0  --  9    -- Second tier ICs
+  , 50.6  -- 10 
+  , 56.3  -- 11                                                                                 
+  , 61.9  -- 12 
+  , 73.1  -- 13 
+  , 78.8  -- 14 
+  , 84.4  -- 15 
+  , 90.0  -- 16 
   ]
+
+
+
+
+
+
+
 
 -- nubFunc = nubBy
 
