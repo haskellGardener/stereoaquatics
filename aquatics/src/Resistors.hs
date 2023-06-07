@@ -282,6 +282,24 @@ hzDutyToSeconds hertz duty = dutySeconds
     period = convert $ recip hertz
     dutySeconds = convert $ period * duty
 
+toMili :: (RealFrac n) => n -> n
+toMili n = n / 10 ^ 3
+
+toMicro :: (RealFrac n) => n -> n
+toMicro n = n / 10 ^ 6
+
+toNano :: (RealFrac n) => n -> n
+toNano n = n / 10 ^ 9
+
+toPico :: (RealFrac n) => n -> n
+toPico n = n / 10 ^ 12
+
+toFemto :: (RealFrac n) => n -> n
+toFemto n = n / 10 ^ 15
+
+toAtto :: (RealFrac n) => n -> n
+toAtto n = n / 10 ^ 18
+
 decade :: (RealFrac a) => a -> Int
 decade a
   | a < 0 = decade (a * -1)
@@ -490,23 +508,22 @@ calcs = twCalcs $ crossProducts ohmsGeometry faradsGeometry
 
 targets :: [] Duty
 targets = map (/ 100.0)
-          
   [  2.55 --  1    -- First tier ICs
-  ,  5.6  --  2 
-  , 11.2  --  3 
-  , 16.9  --  4 
-  , 22.5  --  5 
-  , 28.1  --  6 
-  , 33.8  --  7 
+  ,  5.6  --  2
+  , 11.2  --  3
+  , 16.9  --  4
+  , 22.5  --  5
+  , 28.1  --  6
+  , 33.8  --  7
   , 39.4  --  8
   , 45.0  --  9    -- Second tier ICs
-  , 50.6  -- 10 
-  , 56.3  -- 11                                                                                 
-  , 61.9  -- 12 
-  , 73.1  -- 13 
-  , 78.8  -- 14 
-  , 84.4  -- 15 
-  , 90.0  -- 16 
+  , 50.6  -- 10
+  , 56.3  -- 11
+  , 61.9  -- 12
+  , 73.1  -- 13
+  , 78.8  -- 14
+  , 84.4  -- 15
+  , 90.0  -- 16
   ]
 
 
